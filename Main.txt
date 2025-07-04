@@ -1,29 +1,59 @@
--- Carregar a UI Library
+-- Carrega a YoungStar UI Library
 local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/bloodball/-back-ups-for-libs/main/youngstar"))()
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
--- Variáveis
+-- Variáveis principais
 local systemActive = false
 local viewIndex = 1
 local viewingPlayer = nil
 local followConnection = nil
 local playerList = {}
+local selectedName = ""
 
--- Criar janela principal
-local Window = library:CreateWindow("Gui de visualizar")
+-- GUI: Label com nome do jogador observado
+local ScreenGui = Instance.new("ScreenGui", game:GetService("CoreGui"))
+ScreenGui.Name = "ViewLabel"
+local NameLabel = Instance.new("TextLabel", ScreenGui)
+NameLabel.Size = UDim2.new(0, 300, 0, 30)
+NameLabel.Position = UDim2.new(0.5, -150, 0, 10)
+NameLabel.BackgroundTransparency = 0.4
+NameLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+NameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+NameLabel.TextScaled = true
+NameLabel.Font = Enum.Font.SourceSansBold
+NameLabel.Text = ""
+NameLabel.Visible = false
 
--- Ativar/Desativar sistema
+-- Atualiza a label com o nome do player observado
+game:GetService("RunService").RenderStepped:Connect(function()
+    if systemActive and viewingPlayer and viewingPlayer.Character then
+        NameLabel.Text = "👁️ Observando: " .. viewingPlayer.Name
+        NameLabel.Visible = true
+    else
+        NameLabel.Visible = false
+    end
+end)
+
+-- Função para atualizar a lista de jogadores válidos
+local function updatePlayerList()
+    playerList = {}
+    for _, p in pairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer and p.Character then
+            table.insert(playerList, p)
+        end
+    end
+end
+
+-- Cria janela da biblioteca
+local Window = library:CreateWindow("🔭 View System")
+
+-- Ativar / Desativar sistema de visualização
 Window:Toggle("Ativar Visualização", function(state)
     systemActive = state
     if state then
-        playerList = {}
-        for _, p in pairs(Players:GetPlayers()) do
-            if p ~= LocalPlayer and p.Character then
-                table.insert(playerList, p)
-            end
-        end
+        updatePlayerList()
         if #playerList > 0 then
             viewIndex = 1
             viewingPlayer = playerList[viewIndex]
@@ -36,7 +66,7 @@ Window:Toggle("Ativar Visualização", function(state)
     end
 end)
 
--- Setas de troca de visão
+-- Botões de seta para mudar de visão
 Window:Button("⬅️ Ver Anterior", function()
     if not systemActive or #playerList == 0 then return end
     viewIndex = (viewIndex - 2) % #playerList + 1
@@ -51,13 +81,12 @@ Window:Button("➡️ Ver Próximo", function()
     Camera.CameraSubject = viewingPlayer.Character:FindFirstChild("Humanoid")
 end)
 
--- TextBox para nome do jogador
-local selectedName = ""
+-- TextBox para colocar nome manualmente
 Window:Box("Nome do Jogador", function(text)
     selectedName = text
 end)
 
--- Teleportar para player
+-- Botão: Teleportar para player
 Window:Button("🚀 Teleportar", function()
     local target = Players:FindFirstChild(selectedName) or viewingPlayer
     if target and target.Character and LocalPlayer.Character then
@@ -65,7 +94,7 @@ Window:Button("🚀 Teleportar", function()
     end
 end)
 
--- Grudar no player (seguir posição)
+-- Botão: Grudar no jogador (seguir posição)
 Window:Button("🧲 Grudar", function()
     if followConnection then followConnection:Disconnect() end
     local target = Players:FindFirstChild(selectedName) or viewingPlayer
@@ -78,7 +107,7 @@ Window:Button("🧲 Grudar", function()
     end
 end)
 
--- Desgrudar
+-- Botão: Desgrudar
 Window:Button("❌ Desgrudar", function()
     if followConnection then
         followConnection:Disconnect()
