@@ -12,7 +12,7 @@ local followConnection = nil
 local playerList = {}
 
 -- Criar janela principal
-local Window = library:CreateWindow("Gui de visualizar bois e vacas kkj")
+local Window = library:CreateWindow("Gui de visualizar")
 
 -- Ativar/Desativar sistema
 Window:Toggle("Ativar Visualização", function(state)
